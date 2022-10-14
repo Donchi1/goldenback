@@ -1,0 +1,57 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.animL {
+  animation: animeL linear 1s;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.fade {
+  animation: fade ease-in-out 0.5s;
+}
+
+.sidebar {
+  flex: 1;
+}
+.admin-main {
+  flex: 4;
+}
+.widget1 {
+  flex: 2;
+}
+.widget2 {
+  flex: 1;
+}
+
+.number-Input::-webkit-inner-spin-button,
+.numberInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.detail {
+  border-spacing: 4rem;
+}
+.animB {
+  animation: fadeB 1s forwards;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fadeB {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
