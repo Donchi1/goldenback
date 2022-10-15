@@ -15,7 +15,7 @@ function Empty() {
           </h4>
           <Link
             to="/"
-            className="py-4 px-6 bg-blue-500 uppercase text-white mt-4 rounded hover:opacity-80 transition-all linear duration-700 "
+            className="py-4 px-6 bg-blue-500 uppercase inline-block text-white mt-4 rounded hover:opacity-80 transition-all linear duration-700 "
           >
             {" "}
             Go To Home
