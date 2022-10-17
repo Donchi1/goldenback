@@ -27,7 +27,7 @@ export default function UserWidget() {
         </h1>
       </div>
 
-      <div className="dark:text-gray-500 pt-4">
+      <div className="dark:text-gray-500 pt-4 overflow-x-scroll">
         {recentUsers?.map((each) => (
           <div
             key={each.id}

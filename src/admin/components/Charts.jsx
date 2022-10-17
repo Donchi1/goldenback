@@ -23,8 +23,7 @@ export default function Charts() {
   return (
     <ResponsiveContainer
       width="100%"
-      height="40%"
-      className="shadow-lg rounded-lg mt-4 bg-gray-50 dark:bg-gray-800 dark:text-white pb-4 lg:pb-0"
+      className="shadow-lg lg:max-h-[40%] max-h-[20%] rounded-lg mt-4 bg-gray-50 dark:bg-gray-800 dark:text-white pb-4 lg:pb-0"
     >
       <LineChart
         width={150}

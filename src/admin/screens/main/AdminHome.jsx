@@ -9,11 +9,11 @@ function AdminHome() {
   return (
     <main className="admin-main  dark:bg-black w-full h-auto mb-0 pb-4 px-8">
       <div className="flex  justify-between items-center mx-4 mt-8 mb-4">
-        <h1 className="dark:text-white text-gray-800  font-extrabold text-3xl    uppercase">
+        <h1 className="dark:text-white text-gray-800  font-extrabold lg:text-3xl  text-xl  uppercase">
           Dashboard
         </h1>
 
-        <button className=" py-2 px-4 bg-green-400 text-white  rounded-lg">
+        <button className=" py-2 px-4 bg-green-400 lg:text-[16px] text-sm text-white  rounded-lg">
           {new Date().toDateString().toUpperCase()}
         </button>
       </div>
