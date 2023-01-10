@@ -1,7 +1,7 @@
 import React from "react";
 import * as Icons from "react-bootstrap-icons";
 //import { removeCart, sumDatas } from "../state/goldenSlice";
-import { removeCart } from "../state/cartSlice";
+import { removeCart } from "../State/cartSlice";
 import { useDispatch } from "react-redux";
 import formatCurrency from "../utils/formatCurrency";
 import axios from "../utils/axios";
