@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import axios from "axios";
+import makeRequest from "../utils/makeRequest";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import Toast from "../utils/Alert";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -9,27 +12,58 @@ export default function Register() {
     lastname: "",
     email: "",
     phone: "",
-    status: "",
-    img: "",
-    transactions: "",
+    photo: "",
     gender: "",
     occupation: "",
     address: "",
     password: "",
-    password1: "",
+
     isSubmitting: false,
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const files = e.target.files;
+    setFormData({
+      ...formData,
+      [e.target.name]: files ? files[0] : e.target.value,
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormData({ ...formData, isSubmitting: true });
-    //api call
-    const { isSubmitting, ...others } = formData;
-    localStorage.setItem("user", JSON.stringify({ ...others }));
+    const { isSubmitting, ...info } = formData;
+    const { data, error } = await axios.post(
+      "http://localhost:5000/api/auth/register",
+      info,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    if (error) {
+      setFormData({
+        ...formData,
+        firstname: "",
+        lastname: "",
+        email: "",
+        phone: "",
+        status: "",
+        photo: "",
+        gender: "",
+        occupation: "",
+        address: "",
+        password: "",
+
+        isSubmitting: false,
+      });
+      return Toast.error.fire({
+        icon: "error",
+        text: error,
+      });
+    }
+
     setFormData({
       ...formData,
       firstname: "",
@@ -37,16 +71,22 @@ export default function Register() {
       email: "",
       phone: "",
       status: "",
-      img: "",
-      transactions: "",
+      photo: "",
       gender: "",
       occupation: "",
       address: "",
       password: "",
-      password1: "",
+
       isSubmitting: false,
     });
-    navigate("/auth/login");
+    Toast.success
+      .fire({
+        icon: "success",
+        text: data.message,
+      })
+      .then(() => {
+        navigate("/auth/login");
+      });
   };
 
   return (
@@ -178,10 +218,9 @@ export default function Register() {
                       </label>
                       <input
                         type="file"
-                        name="img"
+                        name="photo"
                         id="img"
                         required
-                        value={formData?.img}
                         onChange={handleChange}
                         className="py-3 duration-500 px-4 outline-none focus:border-blue-400 focus:outline-none rounded bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full"
                       />
@@ -232,7 +271,7 @@ export default function Register() {
                           htmlFor="password"
                           className="py-3 text-lg text-gray-500"
                         >
-                          New Password
+                          Password
                         </label>
                         <input
                           type="password"
@@ -242,24 +281,6 @@ export default function Register() {
                           value={formData.password}
                           onChange={handleChange}
                           className="py-3 px-4 outline-none focus:border-blue-400 focus:outline-none rounded duration-500 bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full "
-                        />
-                      </div>
-                      <div className="w-full ">
-                        <label
-                          htmlFor="password1"
-                          className="py-2 text-lg text-gray-500"
-                        >
-                          Repeat-Password
-                        </label>
-                        <input
-                          type="password"
-                          name="password1"
-                          id="password1"
-                          required
-                          value={formData.password1}
-                          onChange={handleChange}
-                          className="py-3
-                         duration-500 px-4 outline-none focus:border-blue-400 focus:outline-none rounded bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full"
                         />
                       </div>
                     </div>

@@ -1,5 +1,4 @@
-import React, { useContext } from "react";
-import { goldenContext } from "../context/GoldenProvider";
+import React from "react";
 
 import Title from "../components/Title";
 import Category from "../components/Category";
@@ -11,9 +10,8 @@ import Subscribe from "../components/Subscribe";
 import Footer from "../components/Footer";
 
 function Home() {
-  const { scrollRef } = useContext(goldenContext);
   return (
-    <main className="" ref={scrollRef}>
+    <main className="">
       <HomeCarousel />
       <Title text="Products" />
 

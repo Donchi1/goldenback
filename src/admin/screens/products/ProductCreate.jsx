@@ -6,12 +6,22 @@ import { Link } from "react-router-dom";
 export default function ProductCreate() {
   const [formData, setFormData] = useState({
     name: "",
+    title: "",
+    quantity: "",
+    stock: "",
     category: "",
     price: "",
     inStock: "",
     img: "",
+    subImg: "",
+    discount: 0,
+    colors: "",
+    details: "",
     description: "",
   });
+
+  console.log(formData.details.trim().replace("", "{"));
+
   const [userDisplay, setUserDisplay] = useState({
     name: "",
     category: "",
@@ -21,8 +31,18 @@ export default function ProductCreate() {
     description: "",
   });
 
+  console.log(formData);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    console.log(e.target.name);
+    if (e.target.name === "details") {
+      const info = JSON.parse(e.target.value);
+      console.log(info);
+    }
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.files ? e.target.files[0] : e.target.value,
+    });
   };
 
   const handleSubmit = (e) => {
@@ -45,13 +65,13 @@ export default function ProductCreate() {
           </button>
         </Link>
       </div>
-      <div className="mx-4  mt-10 bg-gray-50 rounded-lg dark:bg-gray-800">
+      <div className="mx-4  mt-10 bg-gray-50 rounded-lg dark:bg-gray-800 pb-8">
         <div className="flex justify-around gap-4 lg:flex-row flex-col ">
           <div>
             <h4 className="font-bold text-blue-500 mt-4 mb-4 text-xl text-center">
               Create Product
             </h4>
-            <div className=" mt-4 p-4 flex-[2] shadow-lg flex  ">
+            <div className=" mt-4 p-4 flex-[2] shadow-lg flex w-auto lg:w-[70%] mx-auto">
               <div className="flex-[2]">
                 <form onSubmit={handleSubmit}>
                   <div className="w-full flex flex-col lg:flex-row items-center space-x-0 lg:space-x-4 ">
@@ -65,6 +85,20 @@ export default function ProductCreate() {
                         id="name"
                         required
                         value={formData?.name}
+                        onChange={handleChange}
+                        className="py-3 px-4 outline-none focus:border-blue-400 focus:outline-none duration-500 bg-gray-100 rounded border-2  w-full transition-all ease-linear border-gray-400 hover:border-blue-400"
+                      />
+                    </div>
+                    <div className="w-full ">
+                      <label htmlFor="title" className="py-3  text-gray-500">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        id="title"
+                        required
+                        value={formData?.title}
                         onChange={handleChange}
                         className="py-3 px-4 outline-none focus:border-blue-400 focus:outline-none duration-500 bg-gray-100 rounded border-2  w-full transition-all ease-linear border-gray-400 hover:border-blue-400"
                       />
@@ -137,9 +171,76 @@ export default function ProductCreate() {
                         name="img"
                         id="img"
                         required
-                        value={formData?.img}
                         onChange={handleChange}
                         className="py-3 px-4 outline-none focus:border-blue-400 focus:outline-none duration-500 bg-gray-100 rounded border-2  w-full transition-all ease-linear border-gray-400 hover:border-blue-400"
+                      />
+                    </div>
+                    <div className="w-full ">
+                      <label htmlFor="colors" className="py-3  text-gray-500">
+                        Colors
+                      </label>
+                      <input
+                        type="text"
+                        name="colors"
+                        id="colors"
+                        value={formData.colors}
+                        required
+                        onChange={handleChange}
+                        className="py-3 px-4 outline-none focus:border-blue-400 focus:outline-none duration-500 bg-gray-100 rounded border-2  w-full transition-all ease-linear border-gray-400 hover:border-blue-400"
+                      />
+                    </div>
+                    <div className="w-full ">
+                      <label htmlFor="subImg" className="py-3  text-gray-500">
+                        Images
+                      </label>
+                      <input
+                        type="file"
+                        name="subImg"
+                        id="subImg"
+                        multiple
+                        required
+                        max={4}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            subImg: e.target.files,
+                          })
+                        }
+                        className="py-3 px-4 outline-none focus:border-blue-400 focus:outline-none duration-500 bg-gray-100 rounded border-2  w-full transition-all ease-linear border-gray-400 hover:border-blue-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex flex-col lg:flex-row items-center space-x-0 lg:space-x-4 ">
+                    <div className="w-full ">
+                      <label
+                        htmlFor="details"
+                        className="py-3 text-lg text-gray-500"
+                      >
+                        Details
+                      </label>
+                      <input
+                        name="details"
+                        id="details"
+                        value={formData?.details}
+                        onChange={handleChange}
+                        className="py-3 h-[20%] overflow-hidden px-4 outline-none focus:border-blue-400 focus:outline-none rounded duration-500 bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full "
+                      />
+                    </div>
+                    <div className="w-full ">
+                      <label
+                        htmlFor="discount"
+                        className="py-3 text-lg text-gray-500"
+                      >
+                        Discount
+                      </label>
+                      <input
+                        name="discount"
+                        type="number"
+                        id="discount"
+                        min={0}
+                        value={formData?.discount}
+                        onChange={handleChange}
+                        className="py-3 h-[20%] overflow-hidden px-4 outline-none focus:border-blue-400 focus:outline-none rounded duration-500 bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full "
                       />
                     </div>
                   </div>

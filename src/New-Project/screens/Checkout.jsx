@@ -1,15 +1,18 @@
-import React, { useContext } from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import Title from "../components/Title";
 import * as Icons from "react-bootstrap-icons";
-import { goldenContext } from "../context/GoldenProvider";
 import PayPal from "../components/Paypal";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Stripe from "../components/Stripe";
 import Footer from "../components/Footer";
+import { clearCart } from "../State/cartSlice";
+import formatCurrency from "../utils/formatCurrency";
 
 function Checkout() {
-  const { cart, sumSingle, sumTotal, clearCart } = useContext(goldenContext);
+  const { products, total } = useSelector((state) => state.cart);
+  const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
   const [shipping, setShipping] = useState({
@@ -35,6 +38,12 @@ function Checkout() {
     appartment: "",
     country: "",
   });
+  const [contactInformation, setContactInformation] = useState({
+    email: "",
+    phone: "",
+    firstname: "",
+    lastname: "",
+  });
   const [cityDelivery, setCityDelivery] = useState({
     street: "",
     house: "",
@@ -45,12 +54,19 @@ function Checkout() {
 
     appartment: "",
   });
-  const [contactInformation, setContactInformation] = useState({
-    firstname: "Chidi",
-    lastname: "Onuma",
-    email: "chidi@gmail.com",
-    phone: "34099-30-849e",
-  });
+
+  useEffect(() => {
+    const getUser = () => {
+      setContactInformation({
+        ...contactInformation,
+        email: user.email,
+        phone: user.phone,
+        firstname: user.firstname,
+        lastname: user.lastname,
+      });
+    };
+    getUser();
+  }, [user]);
 
   const handleContact = (e) => {
     setContactInformation({
@@ -64,12 +80,21 @@ function Checkout() {
   const handleCity = (e) => {
     setCityDelivery({ ...cityDelivery, [e.target.name]: e.target.value });
   };
+  const sumSingle = (id) => {
+    const item = products.find((each) => each._id === id);
+    const total = item.price * item.quantity;
+
+    return formatCurrency(total);
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
 
   return (
     <div className="bg-gray-200 min-h-screen">
       <Title text="Checkout" />
       <div className="container mx-auto pb-16">
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className="text-2xl ml-4 lg:ml-0 py-8 text-gray-500">
             <span>1.</span> <span>Contact Information</span>
           </div>
@@ -84,7 +109,7 @@ function Checkout() {
                   name="firstname"
                   id="fname"
                   required
-                  value={contactInformation.firstname}
+                  value={contactInformation?.firstname}
                   onChange={handleContact}
                   className="py-4 px-4 outline-none focus:border-blue-400 focus:outline-none duration-500 bg-gray-100 rounded border-2  w-full transition-all ease-linear border-gray-400 hover:border-blue-400"
                 />
@@ -98,7 +123,7 @@ function Checkout() {
                   name="lastname"
                   required
                   id="lname"
-                  value={contactInformation.lastname}
+                  value={contactInformation?.lastname}
                   onChange={handleContact}
                   className="py-4 px-4 outline-none focus:border-blue-400 focus:outline-none bg-gray-100 rounded border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full "
                 />
@@ -112,7 +137,7 @@ function Checkout() {
                   name="phone"
                   id="phone"
                   required
-                  value={contactInformation.phone}
+                  value={contactInformation?.phone}
                   onChange={handleContact}
                   className="py-4 px-4 outline-none focus:border-blue-400 focus:outline-none rounded duration-500 bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full "
                 />
@@ -126,7 +151,7 @@ function Checkout() {
                   name="email"
                   id="email"
                   required
-                  value={contactInformation.email}
+                  value={contactInformation?.email}
                   onChange={handleContact}
                   className="py-4 duration-500 px-4 outline-none focus:border-blue-400 focus:outline-none rounded bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full"
                 />
@@ -602,11 +627,11 @@ function Checkout() {
           </div>
           <div className="mt-12 h-full  px-8 py-8 mx-auto  bg-white shadow-lg ">
             <h2 className="text-xl text-gray-700 font-medium pb-2">
-              {cart.length > 1 ? "Items In Card" : "Item In Card"}
+              {products?.length > 1 ? "Items In Card" : "Item In Card"}
             </h2>
-            {cart.map((each) => (
+            {products?.map((each) => (
               <div
-                key={each.id}
+                key={each._id}
                 className="flex pb-8 pt-2 justify-between items-center"
               >
                 <div>
@@ -619,7 +644,7 @@ function Checkout() {
                     {each.quantity} x {each.price}
                   </p>
                 </div>
-                <p>{sumSingle(each.id)}</p>
+                <p>{sumSingle(each._id)}</p>
               </div>
             ))}
 
@@ -646,7 +671,7 @@ function Checkout() {
               <div className="flex justify-between">
                 <h3>Subtotal</h3>
 
-                <p>{sumTotal()}</p>
+                <p>{formatCurrency(total)}</p>
               </div>
               <div className="flex justify-between">
                 <h3>Discount</h3>
@@ -658,15 +683,17 @@ function Checkout() {
               <div className="flex justify-between items-center">
                 <h3>Total</h3>
 
-                <p>{sumTotal() ? sumTotal() : "0000"}</p>
+                <p>{total ? formatCurrency(total) : formatCurrency("0000")}</p>
               </div>
-              {/* <button className="mb-6 mt-8 py-2 w-full text-lg uppercase bg-blue-500 text-white focus:outline-none outline-none rounded">
-                checkout
-              </button> */}
+              {shipping.cash && (
+                <button className="mb-6 mt-8 py-2 w-full text-lg uppercase bg-blue-500 text-white focus:outline-none outline-none rounded">
+                  Pay Now
+                </button>
+              )}
 
               {shipping.electronic && (
                 <PayPal
-                  total={sumTotal}
+                  total={total}
                   clearCart={clearCart}
                   replace={navigate}
                 />
@@ -677,12 +704,10 @@ function Checkout() {
 
         {shipping.onlinePayment && (
           <Stripe
-            total={sumTotal}
+            total={total}
             clearCart={clearCart}
-            replace={navigate}
             shipping={shipping}
-            regionDelivery={regionDelivery}
-            cityDelivery={cityDelivery}
+            delivery={shipping.openRegion ? regionDelivery : cityDelivery}
             contactInformation={contactInformation}
           />
         )}

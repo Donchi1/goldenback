@@ -1,30 +1,57 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as Icons from "react-bootstrap-icons";
-import { AuthContext } from "../context/AuthContextProvider";
+import makeRequest from "../utils/makeRequest";
+import Toast from "../utils/Alert";
+import axios from "../utils/axios";
+import { getUser } from "../State/authSlice";
+import { useDispatch } from "react-redux";
 
 export default function () {
-  const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    error: "",
+    isSubmitting: "",
   });
 
-  const handleSubmit = (e) => {
+  const { email, password, isSubmitting } = formData;
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (user?.email !== formData.email)
-      return setFormData({ ...formData, error: "No user found" });
+    setFormData({ ...formData, isSubmitting: true });
+    const { data, error } = await makeRequest(axios.post, "/auth/login", {
+      email,
+      password,
+    });
 
-    if (user?.password !== formData.password)
-      return setFormData({ ...formData, error: "Wrong password" });
+    if (error) {
+      setFormData({
+        ...formData,
+        email: "",
+        password: "",
+        isSubmitting: false,
+      });
+      return Toast.error.fire({
+        icon: "error",
+        text: error,
+      });
+    }
     setFormData({
       email: "",
       password: "",
-      error: "",
+      isSubmitting: false,
     });
-    return navigate("/");
+
+    dispatch(getUser({ data }));
+    localStorage.setItem("user", data._id);
+    localStorage.setItem("token", data.token);
+    await Toast.success.fire({
+      icon: "success",
+      text: "Login successful",
+    });
+
+    navigate("/", { replace: true });
   };
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,7 +63,7 @@ export default function () {
           <div className="text-3xl ml-4 mt-4 text-center uppercase font-extrabold  lg:ml-0 pt-4 text-gray-500">
             <span>Login</span>
           </div>
-          <p className="text-red-500">{formData.error}</p>
+
           <p className="text-center text-blue-600">Login your account</p>
           <div className="w-full ">
             <label htmlFor="email" className="py-2 text-lg text-gray-500">
@@ -47,7 +74,7 @@ export default function () {
               name="email"
               id="email"
               required
-              value={formData.email}
+              value={email}
               onChange={handleChange}
               className="py-4 duration-500 px-4 outline-none focus:border-blue-400 focus:outline-none rounded bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full"
             />
@@ -61,7 +88,7 @@ export default function () {
               name="password"
               id="password"
               required
-              value={formData.password}
+              value={password}
               onChange={handleChange}
               className="py-4 px-4 outline-none focus:border-blue-400 focus:outline-none rounded duration-500 bg-gray-100 border-2 transition-all ease-linear border-gray-400 hover:border-blue-400 w-full "
             />
@@ -70,7 +97,10 @@ export default function () {
             </Link>
           </div>
 
-          <button className=" mt-2 py-4 w-full text-lg uppercase bg-blue-500 text-white focus:outline-none outline-none rounded">
+          <button
+            disabled={isSubmitting}
+            className=" mt-2 py-4 w-full text-lg uppercase bg-blue-500 text-white focus:outline-none outline-none rounded"
+          >
             Submit
           </button>
           <div className="flex items-center pt-4 space-x-1">

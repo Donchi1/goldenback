@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 
 import {
   BrowserRouter as Router,
@@ -15,7 +15,7 @@ import Checkout from "./New-Project/screens/Checkout";
 import Nav from "./New-Project/components/Nav";
 import Search from "./New-Project/screens/Search";
 import SingleCat from "./New-Project/screens/SingelCat";
-import Orders from "./New-Project/screens/SingelCat";
+import Orders from "./New-Project/screens/Orders";
 import Register from "./New-Project/screens/Register";
 import Login from "./New-Project/screens/Login";
 import Reset from "./New-Project/screens/Reset";
@@ -34,26 +34,27 @@ import UserOrders from "./admin/screens/orders/UserOrders";
 import Sidebar from "./admin/components/Sidebar";
 import AdminNav from "./admin/components/AdminNav";
 import Profile from "./New-Project/screens/Profile";
-import { AuthContext } from "./New-Project/context/AuthContextProvider";
 import { Elements } from "@stripe/react-stripe-js";
-
+import axios from "./New-Project/utils/axios";
 import { loadStripe } from "@stripe/stripe-js";
+import { useDispatch, useSelector } from "react-redux";
+import makeRequest from "./New-Project/utils/makeRequest";
 
 function App() {
-  const { user } = useContext(AuthContext);
-  //for backend
+  const { user } = useSelector((state) => state.auth);
 
   const stripe = loadStripe(
     "pk_test_51Jzl48IACXnVF0nB75Q5CtAy2vJ6hF09TbBHRPsWzlTIIQdwLFNMsaRaBaJZmmTZ21vHUVD0APy0sumntoh96ZJx00KycGGb8V"
   );
+  //"pk_live_51MO9G1IpETtN3CkCmr5PsEY78sH9Jz7wJSojBFLnaKSCcsPSbpItfxrrD9OzIDXfAyRTqsYsTEH0sZVdyr1lgVoZ00Z22HT1KP"
 
   const ProtectAuth = () => {
-    if (user) return <Navigate replace to="/" />;
+    if (user?._id) return <Navigate replace to="/" />;
 
     return <Outlet />;
   };
   const ProtectUser = ({ children }) => {
-    if (!user) return <Navigate replace to="/" />;
+    if (!user?._id) return <Navigate replace to="/" />;
 
     return children;
   };

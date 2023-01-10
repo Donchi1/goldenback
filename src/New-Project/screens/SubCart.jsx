@@ -1,9 +1,25 @@
-import React, { useContext } from "react";
+import React from "react";
 import * as Icons from "react-bootstrap-icons";
-import { goldenContext } from "../context/GoldenProvider";
+//import { removeCart, sumDatas } from "../state/goldenSlice";
+import { removeCart } from "../state/cartSlice";
+import { useDispatch } from "react-redux";
+import formatCurrency from "../utils/formatCurrency";
+import axios from "../utils/axios";
 
-function SubCart({ openCart, setOpenCart, cart, navigate }) {
-  const { sumTotal, removeCart } = useContext(goldenContext);
+function SubCart({ openCart, setOpenCart, cart, navigate, total }) {
+  const dispatch = useDispatch();
+  const cartId = localStorage.getItem("cartId");
+
+  const handleRemoveCart = async (id) => {
+    try {
+      const res = await axios.delete(`/carts/delete/${cartId}/${id}`);
+      console.log(res.data);
+      res.data?.empty && localStorage.removeItem("cartId");
+      dispatch(removeCart(id));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <>
@@ -19,7 +35,7 @@ function SubCart({ openCart, setOpenCart, cart, navigate }) {
               />
             </div>
             {cart.map((each) => (
-              <div key={each.id}>
+              <div key={each._id}>
                 <div className="flex space-x-2 lg:items-center items-stretch border-b-2 border-gray-400">
                   <div className=" py-7 ">
                     <img
@@ -32,7 +48,7 @@ function SubCart({ openCart, setOpenCart, cart, navigate }) {
                     <div className="flex justify-between">
                       <p className="mb-2  text-gray-500">{each.name}</p>
                       <Icons.X
-                        onClick={() => removeCart(each.id)}
+                        onClick={() => handleRemoveCart(each._id)}
                         className="cursor-pointer text-2xl text-red-500 font-semibold"
                       />
                     </div>
@@ -53,7 +69,7 @@ function SubCart({ openCart, setOpenCart, cart, navigate }) {
               <div className="flex justify-around items-center py-4">
                 <span className="text-gray-500 text-xl">Subtotal</span>
                 <span className="text-gray-900 font-bold text-xl">
-                  {sumTotal()}
+                  {formatCurrency(total)}
                 </span>
               </div>
               <div className="flex flex-col space-y-4 w-4/5 mx-auto ">

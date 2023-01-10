@@ -2,20 +2,23 @@ import React, { useState, useContext } from "react";
 import Title from "../components/Title";
 import Footer from "../components/Footer";
 import avater from "/ecoms/images/avatar.jpg";
+import { useSelector } from "react-redux";
 import * as Icons from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContextProvider";
+import makeRequest from "../utils/makeRequest";
+import axios from "../utils/axios";
+import Toast from "../utils/Alert";
 
 function Profile() {
   const navigate = useNavigate();
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useSelector((state) => state.auth);
+  console.log(user);
 
   const [formData, setFormData] = useState({
     firstname: user.firstname,
     lastname: user.lastname,
     email: user.email,
     phone: user.phone,
-    password: "",
   });
   const [passwordData, setPasswordData] = useState({
     password: "",
@@ -28,33 +31,46 @@ function Profile() {
   const handleChangePassword = (e) => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
   };
-  const handleSubmit = (e) => {
-    e.preventDefault();
 
-    //api call
-    let myUser = JSON.parse(localStorage.getItem("user"));
-
-    myUser = formData;
-    localStorage.setItem("user", JSON.stringify(myUser));
-    alert("update success");
-  };
-  const handleSubmitPassword = (e) => {
-    e.preventDefault();
-    if (passwordData.password === passwordData.password1) {
-      //api call
-      return setPasswordData({ ...passwordData, password1: "", password: "" });
+  const upDateUserInfo = async (body) => {
+    //api call for user update
+    const { data, error } = await makeRequest(
+      axios.put,
+      `/auth/update/${user._id}`,
+      body
+    );
+    if (error) {
+      return Toast.error.fire({
+        icon: "error",
+        text: error,
+      });
     }
-    return alert("Password must match");
+    setFormData(data);
+    return passwordData({ ...passwordData, password: "", password1: "" });
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await upDateUserInfo({ ...formData, pass: false });
+  };
+  const handleSubmitPassword = async (e) => {
+    e.preventDefault();
+    await upDateUserInfo({ ...passwordData, pass: true });
+  };
+
+  const img = user.photo.split("..")[1].split("\\").join("/").slice(14, 50);
 
   return (
     <>
       <Title text={"Profile"} />
       <div className="mx-8 shadow-lg">
-        <div className="flex justify-around items-center ">
+        <div className="flex flex-col lg:flex-row justify-around items-center ">
           <div className="flex flex-col gap-4 mt-4  p-4">
             <div className="w-[300px]">
-              <img src={avater} className="w-full rounded-full" />
+              <img
+                src={img || avater}
+                className="w-full rounded-full h-[300px]"
+              />
             </div>
             <div className="text-left">
               <p className="text-blue-500 text-md gap-2 items-center flex font-bold capitalize ">
@@ -68,7 +84,7 @@ function Profile() {
               </p>
             </div>
             <button
-              onClick={() => logout()}
+              onClick={() => dispatch(logout())}
               className="bg-red-500 py-4  text-white uppercase text-lg outline-none border-none rounded-lg"
             >
               Log out

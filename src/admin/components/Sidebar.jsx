@@ -1,10 +1,10 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import * as Icons from "react-bootstrap-icons";
-import { adminContext } from "../../New-Project/context/AdminContext";
 
 export default function Sidebar() {
-  const { openSidebar } = useContext(adminContext);
+  const { openSidebar } = useSelector((state) => state.admin);
   const { pathname } = useLocation();
   if (pathname.split("/")[1] === "admin") {
     return (

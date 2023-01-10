@@ -1,32 +1,57 @@
-import React, { useContext, useState, Fragment } from "react";
-import { goldenContext } from "../context/GoldenProvider";
-import { Link, useLocation, useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import Title from "../components/Title";
 import ModalWrapper from "../components/ModalWrapper";
+import { useDispatch, useSelector } from "react-redux";
 
 import RelatedProducts from "../components/RelatedProducts";
 import Footer from "../components/Footer";
+import { addToCart, increment, decrement } from "../State/cartSlice";
+import { getModalFile, getProducts, openModal } from "../State/goldenSlice";
+import axios from "../utils/axios";
+import { getFiltered } from "../utils/getFiltered";
 
 function ProductDetails() {
+  const products1 = useSelector((state) => state.golden);
+  const { products, quantity } = useSelector((state) => state.cart);
+  const dispatch = useDispatch();
   const { id } = useParams();
+  const [item, setItem] = useState({});
 
-  const {
-    addToCart,
-    mobile,
-    increment,
-    decrement,
-    cart,
-    openModal,
-    productInputChange,
+  const [subImage, setsubImage] = useState(item?.img);
 
-    modalFile,
-    setOpenModal,
-  } = useContext(goldenContext);
+  const [light, setLight] = useState(false);
 
-  const [a, b, c, d, e, f, g, h, i, j, k, l] = mobile;
-  const latest = [i, j, i];
+  useEffect(() => {
+    const getProduct = async () => {
+      try {
+        const res = await axios.get("/products/find");
+        dispatch(getProducts(res.data));
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    getProduct();
+  }, [id]);
+  useEffect(() => {
+    const item = products1.products.find((e) => e._id === id);
+    const cartP = products.find((each) => each._id === id);
+    if (cartP) return setItem(cartP);
 
-  const item = mobile.find((e) => e.id === id);
+    setItem(item);
+  }, [id, quantity, products]);
+
+  const [a, b, c, d] = getFiltered(products1.products, products);
+  const latest = [a, b, c];
+
+  const handleImg = (e) => {
+    setsubImage(e.target.src);
+  };
+
+  const handleClick = () => {
+    dispatch(openModal(true));
+    setLight(true);
+  };
 
   if (!item) {
     return (
@@ -37,19 +62,6 @@ function ProductDetails() {
       </div>
     );
   }
-
-  const [subImage, setsubImage] = useState(item.img);
-
-  const [light, setLight] = useState(false);
-
-  const handleImg = (e) => {
-    setsubImage(e.target.src);
-  };
-
-  const handleClick = () => {
-    setOpenModal(true);
-    setLight(true);
-  };
 
   return (
     <>
@@ -72,7 +84,7 @@ function ProductDetails() {
             <p className="my-4 mx-0 text-sm lg:text-base">{item.description}</p>
             <h4 className="text-2xl">Price: ${item.price}</h4>
             <div className="flex  cursor-pointer mb-8 mt-8 space-x-4">
-              {item.subImg.map((each, idx) => (
+              {item?.subImg?.map((each, idx) => (
                 <div
                   className="w-[50px] lg:w-[80px] h-[50px] lg:h-[80px]"
                   key={idx}
@@ -88,7 +100,7 @@ function ProductDetails() {
               ))}
 
               <div className="space-x-8">
-                {item.inStock ? (
+                {item.stock > 0 ? (
                   <span className="text-blue-800 inline-block uppercase px-8 py4 bg-blue-100 border-2 rounded">
                     Instock
                   </span>
@@ -107,8 +119,10 @@ function ProductDetails() {
               </Link>
               <button
                 className="mr-8 ml-8 text-2xl outline-none border-0 focus:outline-none"
-                disabled={item.quantity === 1}
-                onClick={() => decrement(item.id, "single")}
+                disabled={item.quantity === 1 || item.inCart}
+                onClick={() =>
+                  dispatch(decrement({ id: item._id, single: true }))
+                }
               >
                 -
               </button>
@@ -118,25 +132,31 @@ function ProductDetails() {
                 inputMode="numeric"
                 className="number-Input rounded outline-none py-2 border-gray-700 border pl-7"
                 min={1}
-                max={8}
+                max={item.stock}
                 disabled
-                onChange={(e) =>
-                  productInputChange(item.id, e.target.value, "single")
-                }
+                // onChange={(e) =>
+                //   productInputChange(item._id, e.target.value, "single")
+                // }
               />
               <button
                 className="ml-8 mr-8 text-2xl outline-none border-0 focus:outline-none"
-                disabled={item.quantity === 9}
-                onClick={() => increment(item.id, "single")}
+                disabled={item.quantity === item.stock || item.inCart}
+                onClick={() =>
+                  dispatch(increment({ id: item._id, single: true }))
+                }
               >
                 +
               </button>
               <button
-                onClick={() => {
-                  if (item.quantity === "" || item.quantity < 1) return;
-
-                  addToCart(item.id, "single");
-                }}
+                onClick={() =>
+                  dispatch(
+                    addToCart({
+                      info: item,
+                      quantity: 1,
+                      single: true,
+                    })
+                  )
+                }
                 className="flex-shrink py-3 px-8 uppercase ml-0 lg:ml-6 transition-colors ease-linear duration-500 hover:bg-blue-700 bg-blue-500 text-white outline-none focus:outline-none  rounded"
               >
                 {item.inCart ? "InCart" : "Add to Cart"}
@@ -170,7 +190,7 @@ function ProductDetails() {
                     >
                       Os:
                     </th>
-                    <td className="pl-40 py-3">{item.Details.Os}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Os}</td>
                   </tr>
                   <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <th
@@ -179,7 +199,7 @@ function ProductDetails() {
                     >
                       Ram:
                     </th>
-                    <td className="pl-40 py-3">{item.Details.Ram}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Ram}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <th
@@ -189,7 +209,7 @@ function ProductDetails() {
                       Weight
                     </th>
 
-                    <td className="pl-40 py-3">{item.Details.Weight}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Weight}</td>
                   </tr>
 
                   <tr className="bg-white dark:bg-gray-800">
@@ -200,7 +220,7 @@ function ProductDetails() {
                       Dimentions
                     </th>
 
-                    <td className="pl-40 py-3">{item.Details.Dimensions}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Dimensions}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <th
@@ -210,7 +230,7 @@ function ProductDetails() {
                       Batteries
                     </th>
 
-                    <td className="pl-40 py-3">{item.Details.Batteries}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Batteries}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -219,7 +239,7 @@ function ProductDetails() {
                     >
                       Model Number:
                     </td>
-                    <td className="pl-40 py-3">{item.Details.Modelnumber}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Modelnumber}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -228,7 +248,7 @@ function ProductDetails() {
                     >
                       Wireless :
                     </td>
-                    <td className="pl-40 py-3">{item.Details.Wireless}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Wireless}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -237,7 +257,9 @@ function ProductDetails() {
                     >
                       Connectivity:
                     </td>
-                    <td className="pl-40 py-3">{item.Details.Connectivity}</td>
+                    <td className="pl-40 py-3">
+                      {item?.Details?.Connectivity}
+                    </td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -246,7 +268,7 @@ function ProductDetails() {
                     >
                       GPS
                     </td>
-                    <td className="pl-40 py-3">{item.Details.GPS}</td>
+                    <td className="pl-40 py-3">{item?.Details?.GPS}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -256,7 +278,7 @@ function ProductDetails() {
                       SpecialFeature
                     </td>
                     <td className="pl-40 py-3">
-                      {item.Details.Specialfeatures}
+                      {item?.Details?.Specialfeatures}
                     </td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
@@ -266,7 +288,7 @@ function ProductDetails() {
                     >
                       Display
                     </td>
-                    <td className="pl-40 py-3">{item.Details.Display}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Display}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -275,7 +297,7 @@ function ProductDetails() {
                     >
                       Resolution
                     </td>
-                    <td className="pl-40 py-3">{item.Details.Resolution}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Resolution}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -284,7 +306,7 @@ function ProductDetails() {
                     >
                       Color
                     </td>
-                    <td className="pl-40 py-3">{item.Details.Color}</td>
+                    <td className="pl-40 py-3">{item?.Details?.Color}</td>
                   </tr>
                   <tr className="bg-white dark:bg-gray-800">
                     <td
@@ -293,7 +315,7 @@ function ProductDetails() {
                     >
                       Talk-Time
                     </td>
-                    <td className="pl-40 py-3">{item.Details.TalkTime}</td>
+                    <td className="pl-40 py-3">{item?.Details?.TalkTime}</td>
                   </tr>
                 </tbody>
               </table>
@@ -307,16 +329,17 @@ function ProductDetails() {
 
             <RelatedProducts
               item={latest}
-              modalFile={modalFile}
+              modalFile={getModalFile}
               addToCart={addToCart}
-              setOpenModal={setOpenModal}
+              setOpenModal={openModal}
               setLight={setLight}
+              dispatch={dispatch}
             />
           </div>
         </div>
         <ModalWrapper
-          isOpen={openModal}
-          setOpenModal={setOpenModal}
+          isOpen={products1.modal}
+          setOpenModal={openModal}
           modalData={item}
           light={light}
         />

@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 function Modal({ modalData, setOpenModal }) {
+  const dispatch = useDispatch();
   return (
     <div className="h-screen ">
       <div className="flex justify-center items-center  pb-2 h-[100%] lg:h-[50%] xl:h-[70%] xl:mt-[8%] lg:mt-[35%] bg-white px-4">
@@ -19,16 +21,16 @@ function Modal({ modalData, setOpenModal }) {
               <div className="flex space-x-8 mt-6">
                 <Link to="/">
                   <button
-                    onClick={() => setOpenModal(false)}
+                    onClick={() => dispatch(setOpenModal(false))}
                     className="w-full transition-all ease-linear  hover:bg-red-700 bg-red-500  duration-500 py-3 px-8 uppercase text-white border-2 outline-none focus:outline-none rounded"
                   >
                     Products
                   </button>
                 </Link>
-                <Link to={`/productDetails/${modalData.id}`}>
+                <Link to={`/productDetails/${modalData._id}`}>
                   <button
                     onClick={() => {
-                      setOpenModal(false);
+                      dispatch(setOpenModal(false));
                     }}
                     className="w-full   transition-all duration-500 ease-linear hover:bg-blue-700  py-3 px-8 uppercase bg-blue-500 text-white outline-none rounded"
                   >

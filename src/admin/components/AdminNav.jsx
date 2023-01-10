@@ -1,17 +1,22 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as Icons from "react-bootstrap-icons";
 import avater from "/ecoms/images/avatar.jpg";
-import { adminContext } from "../../New-Project/context/AdminContext";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  makeSliderOpen,
+  changeTheme,
+} from "../../New-Project/State/adminSlice";
 
 export default function AdminNav() {
-  const { setOpenSidebar, dark, setDark } = useContext(adminContext);
+  const dispatch = useDispatch();
+  const { dark } = useSelector((state) => state.admin);
   const { pathname } = useLocation();
   const [openDropdown, setOpenDropdown] = useState(false);
   const user = true;
 
   const handleColorPreffrence = (value) => {
-    setDark(value.dark);
+    dispatch(changeTheme(value.dark));
     if (value.dark === true) {
       localStorage.setItem("dark", JSON.stringify(value));
       return document.documentElement.classList.add("dark");
@@ -129,7 +134,7 @@ export default function AdminNav() {
             </div>
             <div
               className="pr-3 cursor-pointer relative block lg:hidden "
-              onClick={() => setOpenSidebar((prev) => !prev)}
+              onClick={() => dispatch(makeSliderOpen())}
             >
               <Icons.Justify
                 size={28}

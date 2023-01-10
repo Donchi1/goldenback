@@ -1,37 +1,87 @@
-import React, { useContext, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import * as Icons from "react-bootstrap-icons";
-import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import SubCart from "../screens/SubCart";
-import { goldenContext } from "../context/GoldenProvider";
-import { AuthContext } from "../context/AuthContextProvider";
+
 import avater from "/ecoms/images/avatar.jpg";
 import { motion } from "framer-motion";
 
 import ModalWrapper from "./ModalWrapper";
+import { getProducts, getSearchItems, openSearch } from "../state/goldenSlice";
+import { getUser, logout } from "../state/authSlice";
+import makeRequest from "../utils/makeRequest";
+import axios from "../utils/axios";
+import { getCart } from "../state/cartSlice";
 
 function Nav() {
   const { pathname } = useLocation();
-  const {
-    cart,
-    sumTotal,
-    searchItem,
-    setOpenModal,
-    setOpenSearch,
-    openSearch,
-  } = useContext(goldenContext);
+
+  const { searchItem, search } = useSelector((state) => state.golden);
+  const { quantity, products, total } = useSelector((state) => state.cart);
+  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [openCart, setOpenCart] = useState();
 
   const [item, setSearchItem] = useState("");
   const [openDropdown, setOpenDropdown] = useState(false);
-  const { user } = useContext(AuthContext);
+  const [cartId] = useState(
+    localStorage.getItem("cartId") || "6375f47ae7abd0feaabe1d36"
+  );
+  const [id] = useState(
+    localStorage.getItem("user") || "6375f47ae7abd0feaabe1d36"
+  );
+  const img = user?.photo?.split("..")[1].split("\\").join("/").slice(14, 50);
+
+  console.log(id);
+  console.log(cartId);
+  //for backend
+  console.log(user);
+  useEffect(() => {
+    const getAllProducts = async () => {
+      try {
+        const res3 = await axios.get("/products/find");
+        dispatch(getProducts(res3.data));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getAllProducts();
+  }, []);
+  useEffect(() => {
+    const getMyUser = async () => {
+      try {
+        const res = await axios.get(`/users/find/${id}`);
+        const res1 = await axios.get(`/carts/find/${cartId}`);
+        dispatch(getUser({ data: res.data }));
+        dispatch(getCart({ data: res1.data }));
+      } catch (error) {
+        console.log(error.response?.data?.message);
+      }
+    };
+    getMyUser();
+  }, []);
 
   const handleSearch = () => {
     if (!item) return;
+    dispatch(openSearch(true));
+    // const { data, error } = makeRequest(
+    //   axios.get,
+    //   `/products/find?text=${item}`
+    // );
+
     navigate({ pathname: "/product/search", state: item });
-    searchItem(item);
-    setOpenSearch(true);
+    dispatch(getSearchItems(item));
+  };
+
+  const logMeout = async () => {
+    const res = await axios.delete("/auth/logout");
+
+    dispatch(logout());
+    localStorage.removeItem("user");
+    localStorage.removeItem("cartId");
   };
 
   const handleChange = (e) => {
@@ -59,7 +109,7 @@ function Nav() {
             className="container mx-auto pt-2 flex
       justify-between items-center"
           >
-            <div className={`${openSearch && "hidden lg:block"}`}>
+            <div className={`${search && "hidden lg:block"}`}>
               <Link to="/">
                 <h1 className="font-medium text-2xl text-gray-400">
                   <span className=" italic font-semibold text-4xl text-blue-500">
@@ -71,13 +121,13 @@ function Nav() {
             </div>
             <div
               className={` lg:flex  items-center  relative ${
-                openSearch
+                search
                   ? "flex w-11/12 lg:w-3/5 transition-all linear duration-500"
                   : "hidden w-6/12 "
               } `}
             >
               <Icons.X
-                onClick={() => setOpenSearch(false)}
+                onClick={() => dispatch(openSearch(false))}
                 className="text-2xl lg:hidden font-semibold text-red-500 cursor-pointer "
               />
 
@@ -88,7 +138,7 @@ function Nav() {
                 onChange={handleChange}
                 placeholder="Search Product"
                 className={` pl-2 ${
-                  openSearch && "max-w-full "
+                  search && "max-w-full "
                 } lg:max-w-full transition-all linear duration-500 mx-auto lg:mx-0 w-4/5 lg:w-full py-2  rounded border-2 border-blue-200 outline-none`}
               />
               <button
@@ -100,17 +150,17 @@ function Nav() {
             </div>
             <div
               className={`${
-                openSearch && "hidden lg:flex"
+                search && "hidden lg:flex"
               } space-x-4 lg:space-x-8 flex items-center justify-center transition-all ease-linear duration-500`}
             >
               <Icons.Search
-                onClick={() => setOpenSearch(true)}
+                onClick={() => dispatch(openSearch(true))}
                 className=" text-gray-400 lg:text-2xl text-xl lg:hidden cursor-pointer"
               />
               <div className="relative">
-                {user ? (
+                {user?._id ? (
                   <img
-                    src={avater}
+                    src={img || avater}
                     onClick={() => setOpenDropdown((prev) => !prev)}
                     className="w-[40px] h-[40px] cursor-pointer rounded-full"
                   />
@@ -122,7 +172,7 @@ function Nav() {
                 )}
                 {openDropdown && (
                   <div className="absolute w-[8rem] flex flex-col lg:right-0 right-1 gap-6 bg-white shadow-lg top-[2.8rem] p-4">
-                    {user ? (
+                    {user?._id ? (
                       <>
                         <Link
                           onClick={() => setOpenDropdown((prev) => !prev)}
@@ -132,9 +182,16 @@ function Nav() {
                           Profile
                         </Link>
                         <Link
+                          onClick={() => setOpenDropdown((prev) => !prev)}
+                          className="border-2 transition-all ease-linear duration-500 hover:opacity-60 border-blue-500 p-2 text-blue-500 rounded-lg "
+                          to="/products/order"
+                        >
+                          Orders
+                        </Link>
+                        <Link
                           onClick={() => {
                             setOpenDropdown((prev) => !prev);
-                            logout();
+                            logMeout();
                           }}
                           className="border-2 transition-all ease-linear duration-500 hover:opacity-60 border-blue-500 p-2 text-blue-500 rounded-lg "
                           to="/#"
@@ -169,18 +226,18 @@ function Nav() {
               >
                 <Icons.Cart className="lg:text-2xl text-xl text-gray-400" />{" "}
                 <span className="absolute  transition-all ease-linear duration-700 text-white text-xs -top-2 right-1 bg-blue-500 px-1 rounded-full">
-                  {cart.length > 0 && cart.length}
+                  {quantity > 0 && quantity}
                 </span>
               </div>
             </div>
           </div>
         </header>
         <SubCart
-          cart={cart}
+          cart={products}
           openCart={openCart}
           setOpenCart={setOpenCart}
           navigate={navigate}
-          subTotal={sumTotal}
+          total={total}
         />
         <ModalWrapper />
       </>

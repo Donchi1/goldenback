@@ -1,45 +1,49 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { goldenContext } from "../context/GoldenProvider";
-import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import axios from "../utils/axios";
+import makeRequest from "../utils/makeRequest";
 import { useNavigate } from "react-router-dom";
+import { clearCart } from "../State/cartSlice";
+import { getOrders } from "../State/goldenSlice";
 
 function Stripe({
   total,
-  clearCart,
-  replace,
+
   shipping,
-  regionDelivery,
-  cityDelivery,
+
+  delivery,
   contactInformation,
 }) {
+  const id = localStorage.getItem("user");
   const stripe = useStripe();
   const elements = useElements();
   const [secret, setSecret] = useState("");
-  const { cart } = useContext(goldenContext);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { products } = useSelector((state) => state.cart);
   const [cardState, setCardState] = useState({
     error: null,
     brand: null,
     disabled: "",
     isLoading: false,
   });
-  const navigate = useNavigate();
+
   const { error, brand, disabled, isLoading } = cardState;
 
   useEffect(() => {
     const getClientSecret = async () => {
       //api call
-      // try{
-
-      //   const res = axios.post(`http://localhost:5000/api/payment?amount=${total * 100}`)
-      //   setSecret(res.data.clientSecret);
-      // }catch(error){
-      //   console.log(error)
-      // }
-      setSecret("dhiuoj");
+      try {
+        const res = await axios.post(`/payment?amount=${total * 100}`);
+        setSecret(res.data.clientSecret);
+        console.log(res.data);
+      } catch (error) {
+        console.log(error);
+      }
     };
     getClientSecret();
-  }, [cart]);
+  }, [products]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,12 +54,37 @@ function Stripe({
           card: elements.getElement(CardElement),
         },
       });
+      const { created, amount, currency, payment_method } = paymentIntent;
+      // make requst for Order
+      const filtered = products.map((each) => {
+        return { productId: each._id, quantity: each.quantity };
+      });
+      const { data, error } = await makeRequest(
+        axios.post,
+        `/orders/create/${id}`,
+        {
+          products: filtered,
+          date: created,
+          amount,
+          shipping: {
+            contact: contactInformation,
+            address: delivery,
+            currency,
+            pickupType: shipping.method,
+            payment_method,
+          },
+        }
+      );
       setCardState({
         ...cardState,
         isLoading: false,
         disabled: false,
         error: null,
       });
+      dispatch(clearCart());
+      localStorage.removeItem("cartId");
+      dispatch(getOrders(data));
+      navigate("/products/order", { replace: true });
     } catch (err) {
       setCardState({ ...cardState, isLoading: false, error: err.message });
     }

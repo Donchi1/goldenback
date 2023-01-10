@@ -1,14 +1,16 @@
 import React, { useContext } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-
-import { goldenContext } from "../context/GoldenProvider";
+import { addToCart } from "../State/cartSlice";
+import { getModalFile, openModal } from "../State/goldenSlice";
+import { getFiltered } from "../utils/getFiltered";
 
 function Search() {
-  const { addToCart, setOpenModal, searchFile, modalFile } =
-    useContext(goldenContext);
+  const dispatch = useDispatch();
+  const { searchItem } = useSelector((state) => state.golden);
   const { state } = useLocation();
 
-  if (searchFile.length === 0) {
+  if (searchItem?.length === 0) {
     return (
       <h1 className="text-center text-red-500 text-xl m-8">
         SORRY NO SUCH PRODUCT FOUND
@@ -25,14 +27,14 @@ function Search() {
 
       <div
         className={`${
-          searchFile.length === 1
+          searchItem?.length === 1
             ? "flex justify-center items-center"
             : "grid  grid-col-1 lg:grid-cols-4"
         }  gap-2  cursor-pointer py-4 bg-gray-200  px-8  text-center mb-8`}
       >
-        {searchFile.map((each) => (
+        {searchItem?.map((each) => (
           <div
-            key={each.id}
+            key={each._id}
             className="border-2 px-4  bg-white border-gray-200 "
           >
             <div className="">
@@ -48,13 +50,13 @@ function Search() {
               width={"400px"}
               className=" object-contain mt-4 mx-auto max-h-full h-48"
               onClick={() => {
-                setOpenModal(true);
-                modalFile(each.id);
+                dispatch(openModal(true));
+                dispatch(getModalFile(each._id));
               }}
             />
             <button
               className="w-full  py-3 px-8 uppercase my-4 transition-colors ease-linear duration-500 hover:bg-blue-700 bg-blue-500 text-white outline-none rounded"
-              onClick={() => addToCart(each.id)}
+              onClick={() => dispatch(addToCart({ info: each, quantity: 1 }))}
             >
               {each.inCart ? "InCart" : "Add to Cart"}
             </button>

@@ -1,61 +1,103 @@
-import React, { useContext, useState } from "react";
+import React from "react";
 import * as Icons from "react-bootstrap-icons";
-import { goldenContext } from "../context/GoldenProvider";
+import { sumDatas } from "../State/goldenSlice";
+import {
+  getCart,
+  decrement,
+  removeCart,
+  increment,
+  clearCart,
+  resetCart,
+} from "../state/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 import { useNavigate } from "react-router-dom";
 
 import Title from "../components/Title";
 import formatCurrency from "../utils/formatCurrency";
 import Footer from "../components/Footer";
+import axios from "../utils/axios";
+import makeRequest from "../utils/makeRequest";
 
 function ProductCart() {
-  const {
-    cart,
-    clearCart,
-    removeCart,
-    sumTotal,
-    increment,
-    decrement,
-
-    setCart,
-
-    productInputChange,
-    sumSingle,
-  } = useContext(goldenContext);
+  const cid = localStorage.getItem("cartId");
+  const dispatch = useDispatch();
+  const { products, total } = useSelector((state) => state.cart);
 
   const navigate = useNavigate();
-  const handleUpdate = (item) => {
-    fetch({ method: "Post", url: "localhost:5000/api/cart/update", body: item })
-      .then((res) => res.json())
-      .then((info) => {
-        console.log(info);
-      })
-      .catch((err) => console.log(err));
+  const handleUpdate = async (item) => {
+    const { data, error } = await makeRequest(
+      axios.put,
+      `/carts/update/${cid}/${item._id}`,
+      item
+    );
+    const newP = products.map((each) => {
+      if (each._id === item._id) {
+        return { ...each, update: false };
+      }
+    });
+    dispatch(getCart({ data: newP }));
+    console.log(error);
+  };
+  const handleClear = async () => {
+    const { data, error } = await makeRequest(
+      axios.delete,
+      `/carts/delete/${cid}`
+    );
+    console.log(error);
+    if (data) {
+      localStorage.removeItem("cartId");
+      dispatch(clearCart());
+      navigate("/");
+    }
   };
 
   const totalItem = () =>
-    cart.reduce((accm, { quantity }) => quantity + accm, 0);
+    products.reduce((accm, { quantity }) => quantity + accm, 0);
 
-  const reset = (id) => {
-    const maped = cart.map((item) => {
-      if (item.id === id)
-        return { ...item, quantity: 1, update: false, inStock: true };
-      return item;
+  const reset = async (id) => {
+    const file = products.find((each) => each._id === id);
+    const maped = products.map((each) => {
+      if (each._id === id) {
+        return { ...each, quantity: 1, update: false };
+      }
+      return each;
     });
-    return setCart(maped);
+
+    return dispatch(resetCart({ cid, id, file, maped }));
   };
 
   const totalDiscount = () =>
-    cart.reduce((acc, { discount }) => discount + acc, 0);
+    products.reduce((acc, { discount }) => acc + discount, 0);
 
-  if (cart.length > 0) {
+  const sumSingle = (id) => {
+    const item = products.find((each) => each._id === id);
+    const total = item.price * item.quantity;
+
+    return formatCurrency(total);
+  };
+
+  const cartId = localStorage.getItem("cartId");
+
+  const handleRemoveCart = async (id) => {
+    try {
+      const res = await axios.delete(`/carts/delete/${cartId}/${id}`);
+
+      res.data?.empty && localStorage.removeItem("cartId");
+      dispatch(removeCart(id));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (products.length > 0) {
     return (
       <>
         <Title text="Cart" />
         <div className="flex w-[90%] mx-auto h-auto lg:h-screen gap-8 flex-wrap lg:flex-nowrap mb-[10rem]">
           <div className="">
-            {cart?.map((item, idx) => (
-              <div key={item.id}>
+            {products?.map((item, idx) => (
+              <div key={item._id}>
                 <div className="flex flex-1 py-8 justify-around items-center  mx-2 flex-wrap text-center  lg:flex-nowrap ">
                   <div className="w-80 lg:w-52 my-4  lg:my-0 cursor-pointer">
                     <img
@@ -98,8 +140,10 @@ function ProductCart() {
                   <div className="">
                     <button
                       className="mr-4 text-2xl outline-none border-0 focus:outline-none"
-                      disabled={item.quantity === 1}
-                      onClick={() => decrement(item.id)}
+                      disabled={
+                        item.quantity > item.stock || item.quantity === 1
+                      }
+                      onClick={() => dispatch(decrement({ id: item._id }))}
                     >
                       -
                     </button>
@@ -111,14 +155,14 @@ function ProductCart() {
                       min={1}
                       max={8}
                       disabled
-                      onChange={(e) =>
-                        productInputChange(item.id, e.target.value)
-                      }
+                      // onChange={(e) =>
+                      //   productInputChange(item.id, e.target.value)
+                      // }
                     />
                     <button
                       className="ml-4 text-2xl outline-none border-0 focus:outline-none"
-                      disabled={item.quantity === 9}
-                      onClick={() => increment(item.id)}
+                      disabled={item.quantity === item.stock}
+                      onClick={() => dispatch(increment({ id: item._id }))}
                     >
                       +
                     </button>
@@ -128,13 +172,13 @@ function ProductCart() {
                       sum
                     </span>
                     <span className="text-gray-900 text-xl">
-                      {sumSingle(item.id)}
+                      {sumSingle(item._id)}
                     </span>
                   </div>
                   <div className="flex justify-center items-center gap-2">
                     <button
                       title="Remove"
-                      onClick={() => removeCart(item.id)}
+                      onClick={() => handleRemoveCart(item._id)}
                       className=" p-2 hover:bg-blue-400 transition-all duration-500 ease-linear uppercase bg-blue-500 text-white outline-none rounded"
                     >
                       <Icons.Trash size={36} />
@@ -144,7 +188,7 @@ function ProductCart() {
                         <button
                           title="Reset"
                           className=" p-2  uppercase hover:bg-red-400 transition-all duration-500 ease-linear bg-red-500 text-white outline-none rounded"
-                          onClick={() => reset(item.id)}
+                          onClick={() => dispatch(reset(item._id))}
                         >
                           <Icons.X size={36} />
                         </button>
@@ -163,7 +207,7 @@ function ProductCart() {
             ))}
           </div>
           <div className=" lg:w-[40%] w-full shadow lg:mr-4 space-y-3 text-left pt-8 my-8 border-2 px-8  ">
-            {cart.length > 0 && (
+            {products.length > 0 && (
               <>
                 <h2 className="text-lg opacity-70 font-medium text-gray-700 ">
                   {totalItem() > 1 ? "Total Items" : "Total Item"}
@@ -180,16 +224,10 @@ function ProductCart() {
 
                 <h2 className="text-xl font-bold text-gray-700 ">
                   Total Cost:
-                  <span className="text-xl text-red-500 ml-2">
-                    {" "}
-                    {sumTotal()}
-                  </span>
+                  <span className="text-xl text-red-500 ml-2"> {total}</span>
                 </h2>
                 <button
-                  onClick={() => {
-                    clearCart();
-                    navigate("/");
-                  }}
+                  onClick={handleClear}
                   className="w-full  transition-colors ease-linear duration-500 py-3 px-8 hover:bg-red-700 uppercase bg-red-500 text-white outline-none rounded"
                 >
                   Clear Cart

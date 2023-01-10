@@ -51,8 +51,6 @@ const Footer = () => {
     }
   };
 
-  const { buttonRef, scrollRef } = useContext(goldenContext);
-
   return (
     <>
       <footer className="relative">
@@ -323,10 +321,10 @@ const Footer = () => {
           </div>
         </div>
         <div
-          ref={buttonRef}
-          onClick={() =>
-            scrollRef.current.scrollIntoView({ behavior: "smooth" })
-          }
+          // ref={buttonRef}
+          // onClick={() =>
+          //   scrollRef.current.scrollIntoView({ behavior: "smooth" })
+          // }
           className="bg-blue-500 hidden cursor-pointer rounded-full hover:opacity-8 transition-all ease-linear duration-700 text-white fixed right-8 z-[1111] top-[90%]"
         >
           <div className="p-2">
