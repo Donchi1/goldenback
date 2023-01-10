@@ -3,8 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { Provider } from "react-redux";
-import { store } from "./new-project/State/store";
+// import store from "./new-project/State/myStore";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+import store from "./New-Project/State/appStore";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <PayPalScriptProvider

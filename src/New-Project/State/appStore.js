@@ -6,7 +6,7 @@ import cartSlice from "./cartSlice"
 
 
 
-export const store = configureStore({
+const store = configureStore({
     reducer: {
         cart: cartSlice,
         auth:authSlice,
@@ -14,3 +14,5 @@ export const store = configureStore({
         admin: adminSlice
     }
 })
+
+export default store
