@@ -9,11 +9,11 @@ import avater from "/ecoms/images/avatar.jpg";
 import { motion } from "framer-motion";
 
 import ModalWrapper from "./ModalWrapper";
-import { getProducts, getSearchItems, openSearch } from "../state/goldenSlice";
-import { getUser, logout } from "../state/authSlice";
+import { getProducts, getSearchItems, openSearch } from "../State/goldenSlice";
+import { getUser, logout } from "../State/authSlice";
 import makeRequest from "../utils/makeRequest";
 import axios from "../utils/axios";
-import { getCart } from "../state/cartSlice";
+import { getCart } from "../State/cartSlice";
 
 function Nav() {
   const { pathname } = useLocation();
