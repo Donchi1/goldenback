@@ -8,7 +8,7 @@ import {
   increment,
   clearCart,
   resetCart,
-} from "../state/cartSlice";
+} from "../State/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 import { useNavigate } from "react-router-dom";
