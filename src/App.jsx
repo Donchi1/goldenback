@@ -44,9 +44,9 @@ function App() {
   const { user } = useSelector((state) => state.auth);
 
   const stripe = loadStripe(
-    "pk_test_51Jzl48IACXnVF0nB75Q5CtAy2vJ6hF09TbBHRPsWzlTIIQdwLFNMsaRaBaJZmmTZ21vHUVD0APy0sumntoh96ZJx00KycGGb8V"
+    "pk_live_51MO9G1IpETtN3CkCmr5PsEY78sH9Jz7wJSojBFLnaKSCcsPSbpItfxrrD9OzIDXfAyRTqsYsTEH0sZVdyr1lgVoZ00Z22HT1KP"
   );
-  //"pk_live_51MO9G1IpETtN3CkCmr5PsEY78sH9Jz7wJSojBFLnaKSCcsPSbpItfxrrD9OzIDXfAyRTqsYsTEH0sZVdyr1lgVoZ00Z22HT1KP"
+  // "pk_test_51Jzl48IACXnVF0nB75Q5CtAy2vJ6hF09TbBHRPsWzlTIIQdwLFNMsaRaBaJZmmTZ21vHUVD0APy0sumntoh96ZJx00KycGGb8V"
 
   const ProtectAuth = () => {
     if (user?._id) return <Navigate replace to="/" />;
