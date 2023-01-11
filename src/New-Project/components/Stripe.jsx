@@ -52,6 +52,7 @@ function Stripe({
       const { paymentIntent } = await stripe.confirmCardPayment(secret, {
         payment_method: {
           card: elements.getElement(CardElement),
+          payment_method: "card",
         },
       });
       const { created, amount, currency, payment_method } = paymentIntent;
